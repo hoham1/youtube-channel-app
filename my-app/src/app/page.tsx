@@ -1,24 +1,33 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { formatDistanceToNow } from "date-fns";
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { formatDistanceToNow } from 'date-fns';
 
 const supabase = createClient(
-  "https://xfzwldurdjffspoynytq.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmendsZHVyZGpmZnNwb3lueXRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5MjAzNTAsImV4cCI6MjA2MTQ5NjM1MH0.lGFfL4BId8q2Ts1b7Bx0wvuaOzAL1GHHPBi8Q1zbxHE"
+  'https://xfzwldurdjffspoynytq.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmendsZHVyZGpmZnNwb3lueXRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5MjAzNTAsImV4cCI6MjA2MTQ5NjM1MH0.lGFfL4BId8q2Ts1b7Bx0wvuaOzAL1GHHPBi8Q1zbxHE'
 );
 
-const CATEGORY_LIST = ["🍳 요리", "🎮 게임", "🧘 건강", "💬 리뷰"];
+const CATEGORY_LIST = ['🍳 요리', '🎮 게임', '🧘 건강', '💬 리뷰'];
+
+type Channel = {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+  created_at: string;
+  user_id: string;
+};
 
 export default function Home() {
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+  const [name, setName] = useState('');
+  const [url, setUrl] = useState('');
   const [category, setCategory] = useState(CATEGORY_LIST[0]);
-  const [channels, setChannels] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState("전체");
-  const [user, setUser] = useState<any>(null);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [search, setSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('전체');
+  const [user, setUser] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -33,51 +42,51 @@ export default function Home() {
 
   const fetchChannels = async () => {
     const { data, error } = await supabase
-      .from("channels")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from('channels')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (!error) setChannels(data || []);
   };
 
   const handleSubmit = async () => {
-    if (!name || !url || !user) return alert("모든 입력칸을 채워주세요!");
-    const { error } = await supabase.from("channels").insert({
+    if (!name || !url || !user) return alert('모든 입력칸을 채워주세요!');
+    const { error } = await supabase.from('channels').insert({
       name,
       url,
       category,
       user_id: user.id,
     });
-    if (error) return alert("등록 실패: " + error.message);
-    alert("등록 완료!");
-    setName("");
-    setUrl("");
+    if (error) return alert('등록 실패: ' + error.message);
+    alert('등록 완료!');
+    setName('');
+    setUrl('');
     setCategory(CATEGORY_LIST[0]);
     fetchChannels();
   };
 
-  const handleDelete = async (id: number) => {
-    const { error } = await supabase.from("channels").delete().eq("id", id);
-    if (error) return alert("삭제 실패: " + error.message);
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('channels').delete().eq('id', id);
+    if (error) return alert('삭제 실패: ' + error.message);
     fetchChannels();
   };
 
   const handleUpdate = async (
-    id: number,
+    id: string,
     name: string,
     url: string,
     category: string
   ) => {
     const { error } = await supabase
-      .from("channels")
+      .from('channels')
       .update({ name, url, category })
-      .eq("id", id);
-    if (error) return alert("수정 실패: " + error.message);
+      .eq('id', id);
+    if (error) return alert('수정 실패: ' + error.message);
     fetchChannels();
   };
 
   const filteredChannels = channels.filter((ch) => {
     const matchesSearch = ch.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = filterCategory === "전체" || ch.category === filterCategory;
+    const matchesCategory = filterCategory === '전체' || ch.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -115,7 +124,9 @@ export default function Home() {
               className="w-full border border-gray-300 rounded-lg p-2 mb-4"
             >
               {CATEGORY_LIST.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
 
@@ -143,12 +154,16 @@ export default function Home() {
             >
               <option value="전체">전체</option>
               {CATEGORY_LIST.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
 
-          <p className="mb-4 text-sm text-gray-600">총 등록된 채널: {filteredChannels.length}개</p>
+          <p className="mb-4 text-sm text-gray-600">
+            총 등록된 채널: {filteredChannels.length}개
+          </p>
 
           <div className="grid gap-4 w-full max-w-2xl">
             {filteredChannels.map((channel) => (
@@ -166,7 +181,15 @@ export default function Home() {
   );
 }
 
-function EditableCard({ channel, onDelete, onUpdate }: any) {
+function EditableCard({
+  channel,
+  onDelete,
+  onUpdate,
+}: {
+  channel: Channel;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, name: string, url: string, category: string) => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(channel.name);
   const [editUrl, setEditUrl] = useState(channel.url);
@@ -201,14 +224,13 @@ function EditableCard({ channel, onDelete, onUpdate }: any) {
             className="w-full border p-2 rounded mb-2"
           >
             {CATEGORY_LIST.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
           </select>
           <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              className="bg-green-500 text-white px-3 py-1 rounded"
-            >
+            <button onClick={handleSave} className="bg-green-500 text-white px-3 py-1 rounded">
               💾 저장
             </button>
             <button
@@ -256,14 +278,14 @@ function EditableCard({ channel, onDelete, onUpdate }: any) {
   );
 }
 
-function LoginForm({ setUser }: { setUser: any }) {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+function LoginForm({ setUser }: { setUser: (u: { id: string }) => void }) {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) return setMessage("로그인 실패: " + error.message);
-    setMessage("이메일로 로그인 링크를 보냈습니다.");
+    if (error) return setMessage('로그인 실패: ' + error.message);
+    setMessage('이메일로 로그인 링크를 보냈습니다.');
   };
 
   return (
